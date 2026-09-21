@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Product, CartItem, Size } from '../types';
+import type { Product, CartItem } from '../types';
+import { supabase } from '../lib/supabase';
 
 export const initialProducts: Product[] = [
   {

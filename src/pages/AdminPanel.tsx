@@ -4,11 +4,11 @@ import { useStore } from '../store/useStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { supabase } from '../lib/supabase';
 import type { Product, Size } from '../types';
-import { Pencil, Trash2, ArrowUp, ArrowDown, Eye, EyeOff, Plus, AlertCircle, Settings, LogOut, Upload, X } from 'lucide-react';
+import { Pencil, Trash2, ArrowUp, ArrowDown, Eye, EyeOff, Plus, Settings, LogOut, Upload, X } from 'lucide-react';
 
 export default function AdminPanel() {
-  const { isAuthenticated, user, loading, checkAuth, setAuth, logout } = useAuthStore();
-  const { products, setProducts, addProduct, updateProduct, deleteProduct, siteSettings, updateSettings } = useStore();
+  const { isAuthenticated, user, loading, checkAuth, logout } = useAuthStore();
+  const { products, addProduct, updateProduct, deleteProduct, siteSettings, updateSettings } = useStore();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

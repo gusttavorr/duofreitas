@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Storefront from './pages/Storefront';
 import AdminPanel from './pages/AdminPanel';
 import Header from './components/Header';
@@ -10,13 +10,6 @@ import NewsletterModal from './components/NewsletterModal';
 import AnnouncementBar from './components/AnnouncementBar';
 import { useStore } from './store/useStore';
 import { useAuthStore } from './store/useAuthStore';
-
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useAuthStore();
-  if (loading) return <div>Loading...</div>;
-  if (!isAuthenticated) return <Navigate to="/admin" />;
-  return <>{children}</>;
-}
 
 function App() {
   const { fetchSettings, fetchProducts } = useStore();
