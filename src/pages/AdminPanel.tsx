@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { useAuthStore } from '../store/useAuthStore';
@@ -24,6 +24,15 @@ export default function AdminPanel() {
     themeColorWhite: siteSettings.themeColorWhite,
     themeColorBlack: siteSettings.themeColorBlack
   });
+
+  useEffect(() => {
+    setHeroSlides(siteSettings.heroSlides);
+    setColors({
+      themeColorOffwhite: siteSettings.themeColorOffwhite,
+      themeColorWhite: siteSettings.themeColorWhite,
+      themeColorBlack: siteSettings.themeColorBlack
+    });
+  }, [siteSettings]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
