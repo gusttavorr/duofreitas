@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --color-black: #000;
-  --color-white: #fff;
-  --color-offwhite: #fafafa;
+  --color-black: #3a2e30; /* Softer black */
+  --color-white: #fff5f7; /* Very light pastel pink */
+  --color-offwhite: #fce8eb; /* Pastel pink */
   --color-gray-light: #e5e5e5;
   --color-gray-dark: #666;
   --font-sans: 'Inter', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;

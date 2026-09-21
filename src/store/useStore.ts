@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Product, CartItem, Size } from '../types';
+import type { Product, CartItem, Size } from '../types';
 
 export const initialProducts: Product[] = [
   {
@@ -120,11 +120,20 @@ interface AppState {
   cart: CartItem[];
   isCartOpen: boolean;
   coupon: string | null;
-  setProducts: (products: Product[]) => void;
-  addProduct: (product: Product) => void;
-  updateProduct: (product: Product) => void;
-  deleteProduct: (id: string) => void;
-  restoreCatalog: () => void;
+  siteSettings: {
+    heroSlides: string[];
+    themeColorOffwhite: string;
+    themeColorWhite: string;
+    themeColorBlack: string;
+  };
+
+  fetchSettings: () => Promise<void>;
+  updateSettings: (settings: any) => Promise<void>;
+  
+  fetchProducts: () => Promise<void>;
+  addProduct: (product: Product) => Promise<void>;
+  updateProduct: (product: Product) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
   
   toggleCart: (isOpen?: boolean) => void;
   addToCart: (item: Omit<CartItem, 'id'>) => void;
@@ -137,20 +146,80 @@ interface AppState {
 export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
-      products: initialProducts,
+      products: [],
       cart: [],
       isCartOpen: false,
       coupon: null,
+      siteSettings: {
+        heroSlides: ['/imagens/hero-1.jpg'],
+        themeColorOffwhite: '#fce8eb',
+        themeColorWhite: '#fff5f7',
+        themeColorBlack: '#3a2e30'
+      },
 
-      setProducts: (products) => set({ products }),
-      addProduct: (product) => set((state) => ({ products: [...state.products, product] })),
-      updateProduct: (product) => set((state) => ({
-        products: state.products.map(p => p.id === product.id ? product : p)
-      })),
-      deleteProduct: (id) => set((state) => ({
-        products: state.products.filter(p => p.id !== id)
-      })),
-      restoreCatalog: () => set({ products: initialProducts }),
+      fetchSettings: async () => {
+        try {
+          const res = await fetch('/api/settings');
+          if (res.ok) {
+            const data = await res.json();
+            set({ siteSettings: data });
+            // Atualizar variáveis CSS no root
+            document.documentElement.style.setProperty('--color-offwhite', data.themeColorOffwhite);
+            document.documentElement.style.setProperty('--color-white', data.themeColorWhite);
+            document.documentElement.style.setProperty('--color-black', data.themeColorBlack);
+          }
+        } catch (e) { console.error(e) }
+      },
+
+      updateSettings: async (settings) => {
+        try {
+          await fetch('/api/settings', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settings)
+          });
+          get().fetchSettings();
+        } catch (e) { console.error(e) }
+      },
+
+      fetchProducts: async () => {
+        try {
+          const res = await fetch('/api/products');
+          if (res.ok) {
+            const products = await res.json();
+            set({ products });
+          }
+        } catch (e) { console.error(e) }
+      },
+      
+      addProduct: async (product) => {
+        try {
+          await fetch('/api/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(product)
+          });
+          get().fetchProducts();
+        } catch (e) { console.error(e) }
+      },
+
+      updateProduct: async (product) => {
+        try {
+          await fetch(`/api/products/${product.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(product)
+          });
+          get().fetchProducts();
+        } catch (e) { console.error(e) }
+      },
+
+      deleteProduct: async (id) => {
+        try {
+          await fetch(`/api/products/${id}`, { method: 'DELETE' });
+          get().fetchProducts();
+        } catch (e) { console.error(e) }
+      },
 
       toggleCart: (isOpen) => set((state) => ({ isCartOpen: isOpen ?? !state.isCartOpen })),
       addToCart: (item) => {
@@ -186,7 +255,8 @@ export const useStore = create<AppState>()(
       removeCoupon: () => set({ coupon: null }),
     }),
     {
-      name: 'duofreitas.catalog.v1',
+      name: 'duofreitas.catalog.v2', // Mudei a key para limpar estado velho
+      partialize: (state) => ({ cart: state.cart, coupon: state.coupon }) // Só salvar carrinho
     }
   )
 );

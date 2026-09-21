@@ -1,54 +1,41 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { Heart } from 'lucide-react';
-import { Size } from '../types';
+import type { Size } from '../types';
 
 function HeroBanner() {
+  const { siteSettings } = useStore();
+  const slides = siteSettings?.heroSlides || [];
   const [slide, setSlide] = useState(0);
 
   useEffect(() => {
+    if (slides.length <= 1) return;
     const timer = setInterval(() => {
-      setSlide(s => (s === 0 ? 1 : 0));
+      setSlide(s => (s + 1) % slides.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [slides.length]);
 
-  const scrollToProducts = () => {
-    document.getElementById('vitrine')?.scrollIntoView({ behavior: 'smooth' });
-  };
+  if (slides.length === 0) return null;
 
   return (
-    <div className="relative w-full h-[74vh] min-h-[460px] overflow-hidden group">
-      {/* Slide 1 */}
-      <div className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${slide === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
-        <img src="/imagens/hero-1.jpg" alt="Drop 01" className="w-full h-full object-cover" />
-        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-        <div className="absolute bottom-12 left-4 md:left-12 text-white">
-          <p className="text-sm font-bold tracking-widest mb-2">DROP 01 / 2026</p>
-          <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-widest uppercase">STREET ESSENTIALS</h2>
-          <button onClick={scrollToProducts} className="bg-white text-black px-8 py-3 font-bold text-sm uppercase hover:bg-black hover:text-white transition-colors">
-            VER COLEÇÃO
-          </button>
-        </div>
-      </div>
+    <div className="relative w-full overflow-hidden bg-offwhite">
+      {/* Imagem invisível para a altura do container dinamicamente */}
+      <img src={slides[0]} alt="" className="w-full h-auto invisible pointer-events-none block" />
       
-      {/* Slide 2 */}
-      <div className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${slide === 1 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
-        <img src="/imagens/hero-2.jpg" alt="Nova Temporada" className="w-full h-full object-cover" />
-        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-        <div className="absolute bottom-12 left-4 md:left-12 text-white">
-          <p className="text-sm font-bold tracking-widest mb-2">NOVA TEMPORADA</p>
-          <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-widest uppercase">URBAN TAILORING</h2>
-          <button onClick={scrollToProducts} className="bg-white text-black px-8 py-3 font-bold text-sm uppercase hover:bg-black hover:text-white transition-colors">
-            COMPRAR AGORA
-          </button>
+      {slides.map((img, i) => (
+        <div key={i} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${slide === i ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+          <img src={img} alt={`Banner ${i}`} className="w-full h-full object-contain block" />
         </div>
-      </div>
+      ))}
 
-      <div className="absolute bottom-6 right-6 z-20 flex gap-2">
-        <button onClick={() => setSlide(0)} className={`h-1 transition-all ${slide === 0 ? 'w-8 bg-white' : 'w-4 bg-white/50'}`} aria-label="Slide 1" />
-        <button onClick={() => setSlide(1)} className={`h-1 transition-all ${slide === 1 ? 'w-8 bg-white' : 'w-4 bg-white/50'}`} aria-label="Slide 2" />
-      </div>
+      {slides.length > 1 && (
+        <div className="absolute bottom-6 right-6 z-20 flex gap-2">
+          {slides.map((_, i) => (
+            <button key={i} onClick={() => setSlide(i)} className={`h-1 transition-all ${slide === i ? 'w-8 bg-black/80' : 'w-4 bg-black/30'}`} aria-label={`Slide ${i + 1}`} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
