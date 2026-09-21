@@ -1,11 +1,12 @@
 import { create } from 'zustand';
+import { supabase } from '../lib/supabase';
+import { User } from '@supabase/supabase-js';
 
 interface AuthState {
   isAuthenticated: boolean;
-  user: { email: string } | null;
+  user: User | null;
   loading: boolean;
   checkAuth: () => Promise<void>;
-  setAuth: (isAuth: boolean, user: any) => void;
   logout: () => Promise<void>;
 }
 
@@ -16,23 +17,28 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   checkAuth: async () => {
     try {
-      const res = await fetch('/api/auth/me');
-      if (res.ok) {
-        const data = await res.json();
-        set({ isAuthenticated: true, user: data.user, loading: false });
-      } else {
-        set({ isAuthenticated: false, user: null, loading: false });
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      set({ 
+        isAuthenticated: !!session, 
+        user: session?.user || null, 
+        loading: false 
+      });
+
+      // Escutar mudanças de autenticação
+      supabase.auth.onAuthStateChange((_event, session) => {
+        set({ 
+          isAuthenticated: !!session, 
+          user: session?.user || null 
+        });
+      });
     } catch {
       set({ isAuthenticated: false, user: null, loading: false });
     }
   },
 
-  setAuth: (isAuth, user) => set({ isAuthenticated: isAuth, user }),
-
   logout: async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await supabase.auth.signOut();
       set({ isAuthenticated: false, user: null });
     } catch (e) {
       console.error(e);

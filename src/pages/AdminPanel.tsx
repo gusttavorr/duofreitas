@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { useAuthStore } from '../store/useAuthStore';
+import { supabase } from '../lib/supabase';
 import type { Product, Size } from '../types';
 import { Pencil, Trash2, ArrowUp, ArrowDown, Eye, EyeOff, Plus, AlertCircle, Settings, LogOut, Upload, X } from 'lucide-react';
 
@@ -28,16 +29,14 @@ export default function AdminPanel() {
     e.preventDefault();
     setLoginError('');
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
-      if (res.ok) {
-        await checkAuth();
+      if (error) {
+        setLoginError(error.message);
       } else {
-        const data = await res.json();
-        setLoginError(data.message || 'Erro ao logar');
+        await checkAuth();
       }
     } catch {
       setLoginError('Erro de conexão');
@@ -45,21 +44,29 @@ export default function AdminPanel() {
   };
 
   const uploadImage = async (file: File): Promise<string | null> => {
-    const formData = new FormData();
-    formData.append('image', file);
     try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-      if (res.ok) {
-        const data = await res.json();
-        return data.url;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
       }
-    } catch (e) {
-      console.error('Erro no upload', e);
+
+      const { data } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Erro no upload', error);
+      alert('Erro ao fazer upload da imagem.');
+      return null;
     }
-    return null;
   };
 
   const handleMove = async (index: number, direction: 'up' | 'down') => {

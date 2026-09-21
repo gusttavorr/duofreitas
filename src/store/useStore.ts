@@ -159,65 +159,116 @@ export const useStore = create<AppState>()(
 
       fetchSettings: async () => {
         try {
-          const res = await fetch('/api/settings');
-          if (res.ok) {
-            const data = await res.json();
-            set({ siteSettings: data });
-            // Atualizar variáveis CSS no root
-            document.documentElement.style.setProperty('--color-offwhite', data.themeColorOffwhite);
-            document.documentElement.style.setProperty('--color-white', data.themeColorWhite);
-            document.documentElement.style.setProperty('--color-black', data.themeColorBlack);
+          const { data, error } = await supabase.from('site_settings').select('*').eq('id', 1).single();
+          if (data && !error) {
+            const settings = {
+              heroSlides: data.hero_slides || ['/imagens/hero-1.jpg'],
+              themeColorOffwhite: data.theme_color_offwhite || '#fce8eb',
+              themeColorWhite: data.theme_color_white || '#fff5f7',
+              themeColorBlack: data.theme_color_black || '#3a2e30'
+            };
+            set({ siteSettings: settings });
+            document.documentElement.style.setProperty('--color-offwhite', settings.themeColorOffwhite);
+            document.documentElement.style.setProperty('--color-white', settings.themeColorWhite);
+            document.documentElement.style.setProperty('--color-black', settings.themeColorBlack);
           }
         } catch (e) { console.error(e) }
       },
 
       updateSettings: async (settings) => {
         try {
-          await fetch('/api/settings', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(settings)
+          const { error } = await supabase.from('site_settings').upsert({
+            id: 1,
+            hero_slides: settings.heroSlides,
+            theme_color_offwhite: settings.themeColorOffwhite,
+            theme_color_white: settings.themeColorWhite,
+            theme_color_black: settings.themeColorBlack,
+            updated_at: new Date().toISOString()
           });
-          get().fetchSettings();
+          if (!error) get().fetchSettings();
         } catch (e) { console.error(e) }
       },
 
       fetchProducts: async () => {
         try {
-          const res = await fetch('/api/products');
-          if (res.ok) {
-            const products = await res.json();
+          const { data, error } = await supabase.from('products').select('*').order('sort_order', { ascending: true });
+          if (data && !error) {
+            const products: Product[] = data.map((row: any) => ({
+              id: row.id,
+              name: row.name,
+              category: row.category,
+              description: row.description,
+              priceOld: row.price_old,
+              priceCurrent: row.price_current,
+              badge: row.badge,
+              visible: row.visible,
+              imageFront: row.image_front,
+              imageBack: row.image_back,
+              stock: {
+                P: row.stock_p,
+                M: row.stock_m,
+                G: row.stock_g,
+                GG: row.stock_gg
+              },
+              order: row.sort_order
+            }));
             set({ products });
           }
         } catch (e) { console.error(e) }
       },
       
-      addProduct: async (product) => {
+      addProduct: async (p) => {
         try {
-          await fetch('/api/products', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(product)
+          const { error } = await supabase.from('products').insert({
+            id: p.id,
+            name: p.name,
+            category: p.category,
+            description: p.description,
+            price_old: p.priceOld || null,
+            price_current: p.priceCurrent,
+            badge: p.badge || null,
+            visible: p.visible,
+            image_front: p.imageFront,
+            image_back: p.imageBack,
+            stock_p: p.stock?.P || 0,
+            stock_m: p.stock?.M || 0,
+            stock_g: p.stock?.G || 0,
+            stock_gg: p.stock?.GG || 0,
+            sort_order: p.order
           });
-          get().fetchProducts();
+          if (!error) get().fetchProducts();
+          else console.error(error);
         } catch (e) { console.error(e) }
       },
 
-      updateProduct: async (product) => {
+      updateProduct: async (p) => {
         try {
-          await fetch(`/api/products/${product.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(product)
-          });
-          get().fetchProducts();
+          const { error } = await supabase.from('products').update({
+            name: p.name,
+            category: p.category,
+            description: p.description,
+            price_old: p.priceOld || null,
+            price_current: p.priceCurrent,
+            badge: p.badge || null,
+            visible: p.visible,
+            image_front: p.imageFront,
+            image_back: p.imageBack,
+            stock_p: p.stock?.P || 0,
+            stock_m: p.stock?.M || 0,
+            stock_g: p.stock?.G || 0,
+            stock_gg: p.stock?.GG || 0,
+            sort_order: p.order
+          }).eq('id', p.id);
+          if (!error) get().fetchProducts();
+          else console.error(error);
         } catch (e) { console.error(e) }
       },
 
       deleteProduct: async (id) => {
         try {
-          await fetch(`/api/products/${id}`, { method: 'DELETE' });
-          get().fetchProducts();
+          const { error } = await supabase.from('products').delete().eq('id', id);
+          if (!error) get().fetchProducts();
+          else console.error(error);
         } catch (e) { console.error(e) }
       },
 
