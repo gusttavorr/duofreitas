@@ -89,7 +89,7 @@ export default function CartSidebar() {
       return;
     }
 
-    const phone = '5511999999999'; // Número do lojista (depois configurar no painel, mas mockado agora)
+    const phone = '5511983656366'; // Número oficial DUOFREITAS
     
     let message = `*NOVO PEDIDO - DUOFREITAS* 🛍️\n\n`;
     
