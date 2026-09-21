@@ -178,15 +178,18 @@ export const useStore = create<AppState>()(
 
       updateSettings: async (settings) => {
         try {
-          const { error } = await supabase.from('site_settings').upsert({
-            id: 1,
+          const { error } = await supabase.from('site_settings').update({
             hero_slides: settings.heroSlides,
             theme_color_offwhite: settings.themeColorOffwhite,
             theme_color_white: settings.themeColorWhite,
             theme_color_black: settings.themeColorBlack,
             updated_at: new Date().toISOString()
-          });
+          }).eq('id', 1);
           if (!error) get().fetchSettings();
+          else {
+            console.error('Erro ao salvar configs:', error);
+            alert('Erro ao salvar as configurações. Tente novamente.');
+          }
         } catch (e) { console.error(e) }
       },
 
